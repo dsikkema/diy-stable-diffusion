@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "diy-stable-diffusion"
+  site-url: "https://dsikkema.github.io/diy-stable-diffusion"
+  description: "''"
+  repo-branch: master
+  repo-url: "https://github.com/dsikkema/diy-stable-diffusion"
