@@ -92,9 +92,10 @@ def append_stats(hook, mod, inp, outp):
     if not hasattr(hook, 'stats'):
         hook.stats = ([], [], [])
     acts = to_cpu(outp)
-    hook.stats[0].append(acts.mean())
-    hook.stats[1].append(acts.std())
-    hook.stats[2].append(acts.abs().histc(40,0,10))
+    if type(acts) is torch.Tensor:
+        hook.stats[0].append(acts.mean())
+        hook.stats[1].append(acts.std())
+        hook.stats[2].append(acts.abs().histc(40,0,10))
 
 # %% ../nbs/10 copy activations.ipynb 40
 '''

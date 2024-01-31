@@ -35,7 +35,7 @@ def summary(self:Learner):
         flops = sum(_flops(o, h, w) for o in mod.parameters())/1e6
         totf += flops
         res += f'|{type(mod).__name__}|{tuple(inp[0].shape)}|{tuple(outp.shape)}|{nparms}|{flops:.1f}|\n'
-    with Hooks(self.model, _f) as hooks: self.fit(1, lr=1, cbs=SingleBatchCB())
+    with Hooks(self.model, _f) as hooks: self.fit(1, lr=1, do_train=False, do_validate=True, cbs=SingleBatchCB())
     print(f"Tot params: {totp}; MFLOPS: {totf:.1f}")
     if fc.IN_NOTEBOOK:
         from IPython.display import Markdown
@@ -49,24 +49,39 @@ def show_image_batch(self:Learner, max_n=9, cbs=None, **kwargs):
     self.fit(1, cbs=[SingleBatchCB()]+fc.L(cbs))
     show_images(self.batch[0][:max_n], **kwargs)
 
-# %% ../nbs/14 copy data augmentation.ipynb 55
+# %% ../nbs/14 copy data augmentation.ipynb 59
 class CapturePreds(Callback):
-    def before_fit(self, learn):
-        self.all_inps = []
-        self.all_preds = []
-        self.all_targs = []
-    
+    def before_fit(self, learn): self.all_inps,self.all_preds,self.all_targs = torch.tensor([]),torch.tensor([]),torch.tensor([])
     def after_batch(self, learn):
-        self.all_inps.append(to_cpu(learn.batch[0]))
-        self.all_preds.append(to_cpu(learn.preds))
-        self.all_targs.append(to_cpu(learn.batch[1]))
-                              
-    def after_fit(self, learn):
-        self.all_inps  = torch.cat( self.all_inps )
-        self.all_preds = torch.cat( self.all_preds)                    
-        self.all_targs = torch.cat( self.all_targs)
+        # self.all_inps. append(to_cpu(learn.batch[0]))
+        self.all_inps = torch.cat((self.all_inps, to_cpu(learn.batch[0])))
+        # self.all_preds.append(to_cpu(learn.preds))
+        self.all_preds = torch.cat((self.all_preds, to_cpu(learn.preds)))
+        # self.all_targs.append(to_cpu(learn.batch[1]))
+        self.all_targs = torch.cat((self.all_targs, to_cpu(learn.batch[1])))
 
-# %% ../nbs/14 copy data augmentation.ipynb 56
+    # def after_fit(self, learn):
+    #     self.all_preds,self.all_targs,self.all_inps = map(torch.cat, [self.all_preds,self.all_targs,self.all_inps])
+
+    
+    
+# class CapturePreds(Callback):
+#     def before_fit(self, learn):
+#         self.all_inps = []
+#         self.all_preds = []
+#         self.all_targs = []
+    
+#     def after_batch(self, learn):
+#         self.all_inps.append(to_cpu(learn.batch[0]))
+#         self.all_preds.append(to_cpu(learn.preds))
+#         self.all_targs.append(to_cpu(learn.batch[1]))
+                              
+#     def after_fit(self, learn):
+#         self.all_inps  = torch.cat( self.all_inps )
+#         self.all_preds = torch.cat( self.all_preds)                    
+#         self.all_targs = torch.cat( self.all_targs)
+
+# %% ../nbs/14 copy data augmentation.ipynb 60
 @fc.patch
 def capture_preds(self: Learner, cbs=None, inps=False):
     predscb = CapturePreds()
@@ -77,7 +92,7 @@ def capture_preds(self: Learner, cbs=None, inps=False):
     
     return res
 
-# %% ../nbs/14 copy data augmentation.ipynb 60
+# %% ../nbs/14 copy data augmentation.ipynb 64
 def _rand_erase1(x, pct, xmean, xstd, xmin, xmax):
     size_x = int(pct * x.shape[-2])
     size_y = int(pct * x.shape[-1])
@@ -86,7 +101,7 @@ def _rand_erase1(x, pct, xmean, xstd, xmin, xmax):
     init.normal_(x[:, :, start_x:start_x+size_x, start_y:start_y+size_y], xmean, xstd)
     x.clamp_(xmin, xmax)
 
-# %% ../nbs/14 copy data augmentation.ipynb 61
+# %% ../nbs/14 copy data augmentation.ipynb 65
 def rand_erase(x, pct=0.2, max_num=4):
     for i in range(random.randint(0, max_num)):
         _rand_erase1(x, pct, x.mean(), x.std(), x.min(), x.max())
@@ -100,7 +115,7 @@ class RandErase(nn.Module):
     def forward(self, x):
         return rand_erase(x, self.pct, self.max_num)
 
-# %% ../nbs/14 copy data augmentation.ipynb 74
+# %% ../nbs/14 copy data augmentation.ipynb 78
 def _rand_copy1(x, pct):
     szx = int(pct*x.shape[-2])
     szy = int(pct*x.shape[-1])
@@ -110,14 +125,14 @@ def _rand_copy1(x, pct):
     sty2 = int(random.random()*(1-pct)*x.shape[-1])
     x[:,:,stx1:stx1+szx,sty1:sty1+szy] = x[:,:,stx2:stx2+szx,sty2:sty2+szy]
 
-# %% ../nbs/14 copy data augmentation.ipynb 75
+# %% ../nbs/14 copy data augmentation.ipynb 79
 def rand_copy(x, pct=0.2, max_num = 4):
     num = random.randint(0, max_num)
     for i in range(num): _rand_copy1(x, pct)
 #     print(num)
     return x
 
-# %% ../nbs/14 copy data augmentation.ipynb 76
+# %% ../nbs/14 copy data augmentation.ipynb 80
 class RandCopy(nn.Module):
     def __init__(self, pct=0.2, max_num=4):
         super().__init__()

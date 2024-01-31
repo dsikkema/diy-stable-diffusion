@@ -20,11 +20,12 @@ def conv(in_channels, out_channels, kernel_size=3, stride=2, act=True):
     kernel corresponding to each of I input layers. The results of those I convolutions are combined
     (for instance by adding, or averaging) to form the convolution result for that channel. Hence
     the parameters shape for a conv layer with O output channels, I input channels, and K*K kernel is
-    (O, I, K, K).
+    (O, I, K, K) - in other words, "each output channel O has I kernels of size (K,K)".
     
     If bias is present (true by default) there will be another parameter tensor, of rank 1, which
     is shape (out_channels). There will be one bias per output channel which broadcasts to add
     to the entire channel tensor.
+
     '''
     res = nn.Conv2d(in_channels, out_channels, stride=stride, kernel_size=kernel_size, padding=kernel_size//2)
     if act:
