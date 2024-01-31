@@ -1,9 +1,10 @@
 # diy-stable-diffusion
 
-## `nbs`: Notebooks
-nbs directory is a bunch of notebooks reproducing the steps in the course.fast.ai lesson notebooks,
-with very messy tinkering steps to get a feel for libraries and techniques. 
+## [Demo Here](./demo/diffusion-demo.ipynb)
+The demo for the project is [./demo/diffusion-demo.ipynb](./demo/diffusion-demo.ipynb)
 
-## `diy_stable_diffusion` the library
-From the notebooks, the homegrown 'library' is written because individual cells I wrote get exported into a module
-which eventually implements the whole 'stable diffusion from scratch' idea.
+## `nbs`: Notebooks
+./nbs directory is my "homework" directory, doing the work for each lesson, which includes writing the code that gets exported from these notebooks into the "diy_stable_diffusion" package underneath ./diy_stable_diffusion. These notebooks include code that implements ideas like fully connected networks, convolutional layers, dropout, and backpropagation, in order to understand them better, even though we'll end up using better and more optimized versions of those components that are implemented in other libraries such as pytorch.
+
+## `diy_stable_diffusion`: The Library
+A library of components that implement everything needed to build a diffusion model, from a Learner framework that runs the SGD training loop on a model with training and validation data, to self-attention
